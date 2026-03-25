@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plan de Trabajo — Modelos de Riesgo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #F7F5F0;
+  --bg2:      #EDEAE3;
+  --card:     #FFFFFF;
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.14);
+  --text:     #1A1814;
+  --muted:    #7A7568;
+  --light:    #A8A39A;
+
+  --cd: #1D4E89;   /* científico de datos — azul oscuro */
+  --bi: #2D7D4F;   /* analista BI — verde */
+  --ip: #8B4513;   /* ingeniero procesos — café */
+  --ae: #6B2D8B;   /* analista estrategia — morado */
+  --all:#C0392B;   /* todos — rojo */
+
+  --cd-l: #D6E4F7;
+  --bi-l: #D4EDDA;
+  --ip-l: #F5DEB3;
+  --ae-l: #E8D5F5;
+  --all-l:#FADBD8;
+
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+
+/* ── HEADER ── */
+.header { background: var(--text); color: #F7F5F0; padding: 32px 40px 28px; }
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+.project-label { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: #A8A39A; margin-bottom: 8px; }
+.project-title { font-family: var(--display); font-size: 26px; font-weight: 700; line-height: 1.2; }
+.project-title span { color: #EF9F27; }
+.header-meta { display: flex; gap: 24px; flex-wrap: wrap; }
+.meta-item { font-size: 12px; color: #A8A39A; }
+.meta-item strong { color: #F7F5F0; font-weight: 500; display: block; font-size: 13px; }
+
+/* ── LEGEND ── */
+.legend-bar { background: var(--bg2); padding: 14px 40px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border2); }
+.legend-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); font-weight: 500; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ── MAIN LAYOUT ── */
+.main { padding: 28px 40px 48px; }
+
+/* ── WEEK HEADERS ── */
+.gantt-wrap { overflow-x: auto; }
+.gantt { min-width: 860px; }
+
+.gantt-header { display: grid; grid-template-columns: 260px 1fr; gap: 0; margin-bottom: 4px; }
+.gantt-header-label { font-family: var(--mono); font-size: 10px; color: var(--light); letter-spacing: 1px; text-transform: uppercase; padding: 0 0 8px 12px; }
+.weeks-header { display: grid; grid-template-columns: repeat(20, 1fr); }
+.week-label { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: center; padding-bottom: 8px; letter-spacing: 0.5px; }
+.week-label.first { text-align: left; }
+
+/* ── PHASE BLOCKS ── */
+.phase { margin-bottom: 6px; }
+.phase-title-row { display: grid; grid-template-columns: 260px 1fr; align-items: center; margin-bottom: 3px; }
+.phase-label { font-family: var(--display); font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); padding: 6px 0 4px 12px; border-left: 3px solid var(--border2); }
+.phase-bg { background: var(--bg2); height: 2px; border-radius: 1px; }
+
+/* ── TASK ROWS ── */
+.task-row { display: grid; grid-template-columns: 260px 1fr; align-items: center; margin-bottom: 3px; min-height: 38px; }
+.task-row:hover .task-info { background: rgba(0,0,0,0.03); }
+
+.task-info { padding: 6px 10px 6px 12px; display: flex; flex-direction: column; gap: 2px; border-radius: 6px 0 0 6px; cursor: default; transition: background 0.15s; }
+.task-name { font-size: 12px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.task-owner { font-size: 10px; font-family: var(--mono); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.owner-badge { padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 500; white-space: nowrap; }
+
+.task-bars { display: grid; grid-template-columns: repeat(20, 1fr); align-items: center; position: relative; height: 38px; }
+.day-cell { height: 100%; border-right: 1px solid var(--border); }
+.day-cell.week-end { border-right: 2px solid var(--border2); }
+
+.bar { position: absolute; height: 22px; border-radius: 5px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; padding: 0 8px; font-size: 10px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: filter 0.15s, transform 0.15s; z-index: 2; }
+.bar:hover { filter: brightness(0.92); transform: translateY(-50%) scaleY(1.08); z-index: 10; }
+
+/* milestone diamond */
+.milestone { position: absolute; width: 14px; height: 14px; transform: translateY(-50%) rotate(45deg); top: 50%; border-radius: 2px; z-index: 3; cursor: pointer; }
+.milestone:hover { transform: translateY(-50%) rotate(45deg) scale(1.2); }
+
+/* today line */
+.today-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #EF9F27; z-index: 20; pointer-events: none; opacity: 0.7; }
+
+/* ── TOOLTIP ── */
+.tooltip { position: fixed; background: var(--text); color: #F7F5F0; padding: 10px 14px; border-radius: 8px; font-size: 12px; pointer-events: none; z-index: 1000; max-width: 260px; line-height: 1.6; display: none; }
+.tooltip strong { font-family: var(--display); font-size: 13px; display: block; margin-bottom: 4px; }
+.tooltip .t-row { display: flex; justify-content: space-between; gap: 16px; }
+.tooltip .t-label { color: #A8A39A; font-size: 11px; }
+
+/* ── SUMMARY CARDS ── */
+.summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px; }
+.s-card { background: var(--card); border: 1px solid var(--border2); border-radius: 10px; padding: 16px; }
+.s-card-label { font-family: var(--mono); font-size: 10px; color: var(--light); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.s-card-name { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.s-card-tasks { font-size: 12px; color: var(--muted); }
+.s-card-bar { height: 4px; border-radius: 2px; margin-top: 10px; }
+
+/* ── ENTREGABLES ── */
+.deliverables { margin-top: 32px; }
+.del-title { font-family: var(--display); font-size: 14px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+.del-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.del-card { background: var(--card); border: 1px solid var(--border2); border-radius: 8px; padding: 14px; border-top: 3px solid; }
+.del-week { font-family: var(--mono); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+.del-items { font-size: 12px; color: var(--muted); line-height: 1.8; }
+.del-items li { list-style: none; padding-left: 12px; position: relative; }
+.del-items li::before { content: '—'; position: absolute; left: 0; color: var(--light); }
+
+@media (max-width: 900px) {
+  .summary, .del-grid { grid-template-columns: 1fr 1fr; }
+  .header { padding: 24px 20px; }
+  .main { padding: 20px; }
+  .legend-bar { padding: 12px 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="project-label">Equipo Estrategia de Pricing y Rentabilidad</div>
+      <div class="project-title">Modelos de Riesgo<br><span>Crediticio — Fase I</span></div>
+    </div>
+    <div style="text-align:right">
+      <div class="project-label">Estado</div>
+      <div style="font-family:var(--mono);font-size:13px;color:#EF9F27;font-weight:500">EN PLANIFICACIÓN</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <div class="meta-item"><strong>Inicio</strong>1 Abril 2025</div>
+    <div class="meta-item"><strong>Cierre</strong>30 Abril 2025</div>
+    <div class="meta-item"><strong>Duración</strong>4 semanas · 20 días hábiles</div>
+    <div class="meta-item"><strong>Equipo</strong>4 personas</div>
+    <div class="meta-item"><strong>Objetivo</strong>PD · LGD · EAD · CVaR · RAROC</div>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <span style="font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--light);margin-right:4px">Responsables</span>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--cd)"></div>Científico de Datos</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--bi)"></div>Analista BI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--ip)"></div>Ing. de Procesos</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--ae)"></div>Analista Estrategia</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--all)"></div>Todo el equipo</div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+    <span style="display:inline-block;width:12px;height:12px;background:#EF9F27;transform:rotate(45deg);border-radius:2px"></span>Hito / Entregable
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SUMMARY CARDS -->
+  <div class="summary">
+    <div class="s-card">
+      <div class="s-card-label">Científico de Datos</div>
+      <div class="s-card-name">Data Scientist</div>
+      <div class="s-card-tasks">8 tareas · Líder técnico</div>
+      <div class="s-card-bar" style="background:var(--cd)"></div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-label">Analista BI</div>
+      <div class="s-card-name">BI Analyst</div>
+      <div class="s-card-tasks">5 tareas · Visualización</div>
+      <div class="s-card-bar" style="background:var(--bi)"></div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-label">Ing. de Procesos</div>
+      <div class="s-card-name">Process Engineer</div>
+      <div class="s-card-tasks">5 tareas · Pipelines y BD</div>
+      <div class="s-card-bar" style="background:var(--ip)"></div>
+    </div>
+    <div class="s-card">
+      <div class="s-card-label">Analista Estrategia</div>
+      <div class="s-card-name">Strategy Analyst</div>
+      <div class="s-card-tasks">6 tareas · Decisiones y validación</div>
+      <div class="s-card-bar" style="background:var(--ae)"></div>
+    </div>
+  </div>
+
+  <!-- GANTT -->
+  <div class="gantt-wrap">
+  <div class="gantt">
+
+    <!-- Week header -->
+    <div class="gantt-header">
+      <div class="gantt-header-label">Tarea</div>
+      <div class="weeks-header" id="week-header"></div>
+    </div>
+
+    <!-- FASE 1 -->
+    <div class="phase">
+      <div class="phase-title-row">
+        <div class="phase-label">Fase 1 — Entendimiento y Setup (Sem 1)</div>
+        <div class="phase-bg"></div>
+      </div>
+
+      <div class="task-row" data-task="Kick-off y alineación del equipo" data-owner="Todo el equipo" data-start="0" data-dur="1" data-color="all" data-desc="Reunión inicial: objetivos, responsables, acceso a BD, definición de entregables por semana.">
+        <div class="task-info">
+          <div class="task-name">Kick-off y alineación del equipo</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--all-l);color:var(--all)">Todo el equipo</span></div>
+        </div>
+        <div class="task-bars" id="bar-0"></div>
+      </div>
+
+      <div class="task-row" data-task="Auditoría y mapeo de BD actual" data-owner="Ing. Procesos + Científico Datos" data-start="0" data-dur="3" data-color="ip" data-desc="Revisar estructura de tablas, calidad de datos, nulos, inconsistencias. Mapear columnas disponibles vs requeridas para PD, LGD, EAD.">
+        <div class="task-info">
+          <div class="task-name">Auditoría y mapeo de BD actual</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ip-l);color:var(--ip)">Ing. Procesos</span></div>
+        </div>
+        <div class="task-bars" id="bar-1"></div>
+      </div>
+
+      <div class="task-row" data-task="Definir universo y segmentos" data-owner="Analista Estrategia" data-start="0" data-dur="2" data-color="ae" data-desc="Definir qué segmentos de cartera entran al modelo: por sector, producto, región, personería. Establecer restricciones de negocio.">
+        <div class="task-info">
+          <div class="task-name">Definir universo y segmentos</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ae-l);color:var(--ae)">Analista Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-2"></div>
+      </div>
+
+      <div class="task-row" data-task="Construcción de tablas base (SQL)" data-owner="Ing. Procesos + Científico Datos" data-start="1" data-dur="4" data-color="ip" data-desc="Crear vistas o tablas materializadas: returns_matrix, portfolio_base, defaults_history. Compatible SQL Server / MySQL / Oracle.">
+        <div class="task-info">
+          <div class="task-name">Construcción tablas base (SQL)</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ip-l);color:var(--ip)">Ing. Procesos</span></div>
+        </div>
+        <div class="task-bars" id="bar-3"></div>
+      </div>
+
+      <div class="task-row" data-task="Diseño del modelo PD (borrador)" data-owner="Científico de Datos" data-start="2" data-dur="3" data-color="cd" data-desc="Diseñar la lógica del modelo de Probabilidad de Default usando Score, Bucket mora y Estado crédito. Selección de método: regresión logística o scorecards.">
+        <div class="task-info">
+          <div class="task-name">Diseño modelo PD — borrador</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-4"></div>
+      </div>
+
+    </div>
+
+    <!-- HITO SEM 1 -->
+    <div class="task-row" data-task="HITO: BD lista + segmentos definidos" data-owner="Todo el equipo" data-start="4" data-dur="0" data-color="all" data-desc="Entregable fin Semana 1: tablas base construidas, universo de segmentos aprobado, modelo PD en borrador.">
+      <div class="task-info">
+        <div class="task-name" style="color:var(--all);font-weight:600">★ BD lista + segmentos aprobados</div>
+        <div class="task-owner"><span class="owner-badge" style="background:var(--all-l);color:var(--all)">Hito Semana 1</span></div>
+      </div>
+      <div class="task-bars" id="bar-m1"></div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="phase" style="margin-top:10px">
+      <div class="phase-title-row">
+        <div class="phase-label">Fase 2 — Modelos PD y LGD (Sem 2)</div>
+        <div class="phase-bg"></div>
+      </div>
+
+      <div class="task-row" data-task="Modelo PD por segmento (SQL+Python)" data-owner="Científico de Datos" data-start="5" data-dur="4" data-color="cd" data-desc="Calcular tasa histórica de default por segmento (sector, bucket, score). Regresión logística para estimar PD individual. Output: tabla pd_by_segment.">
+        <div class="task-info">
+          <div class="task-name">Modelo PD por segmento</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-5"></div>
+      </div>
+
+      <div class="task-row" data-task="Modelo LGD (pérdida dado default)" data-owner="Científico de Datos" data-start="6" data-dur="3" data-color="cd" data-desc="Estimar LGD = (Saldo capital - Recuperación) / Saldo capital. Por producto, garantía y sector. Output: tabla lgd_estimates.">
+        <div class="task-info">
+          <div class="task-name">Modelo LGD — pérdida dado default</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-6"></div>
+      </div>
+
+      <div class="task-row" data-task="Pipeline de actualización automática" data-owner="Ing. de Procesos" data-start="5" data-dur="5" data-color="ip" data-desc="Construir el proceso ETL que actualiza las métricas calculadas mensualmente. Scheduler en SQL Agent / cron job. Trazabilidad de versiones.">
+        <div class="task-info">
+          <div class="task-name">Pipeline ETL de actualización</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ip-l);color:var(--ip)">Ing. de Procesos</span></div>
+        </div>
+        <div class="task-bars" id="bar-7"></div>
+      </div>
+
+      <div class="task-row" data-task="Validación lógica de PD vs realidad" data-owner="Analista Estrategia" data-start="7" data-dur="2" data-color="ae" data-desc="Revisar que los valores PD por segmento tengan sentido de negocio. ¿Los sectores de mayor mora tienen mayor PD? Aprobar o solicitar ajustes.">
+        <div class="task-info">
+          <div class="task-name">Validación PD vs lógica de negocio</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ae-l);color:var(--ae)">Analista Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-8"></div>
+      </div>
+
+      <div class="task-row" data-task="Vista previa BI — PD y LGD" data-owner="Analista BI" data-start="8" data-dur="2" data-color="bi" data-desc="Primer borrador de visualización: distribución de PD por sector/región, distribución LGD por producto. Para presentar en revisión Semana 2.">
+        <div class="task-info">
+          <div class="task-name">Vista previa BI — PD y LGD</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--bi-l);color:var(--bi)">Analista BI</span></div>
+        </div>
+        <div class="task-bars" id="bar-9"></div>
+      </div>
+
+    </div>
+
+    <!-- HITO SEM 2 -->
+    <div class="task-row" data-task="HITO: PD y LGD validados" data-owner="Todo el equipo" data-start="9" data-dur="0" data-color="all" data-desc="Entregable fin Semana 2: tablas pd_by_segment y lgd_estimates validadas y aprobadas. Pipeline ETL corriendo.">
+      <div class="task-info">
+        <div class="task-name" style="color:var(--all);font-weight:600">★ PD y LGD validados y aprobados</div>
+        <div class="task-owner"><span class="owner-badge" style="background:var(--all-l);color:var(--all)">Hito Semana 2</span></div>
+      </div>
+      <div class="task-bars" id="bar-m2"></div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="phase" style="margin-top:10px">
+      <div class="phase-title-row">
+        <div class="phase-label">Fase 3 — EAD, Pérdida Esperada y CVaR (Sem 3)</div>
+        <div class="phase-bg"></div>
+      </div>
+
+      <div class="task-row" data-task="Cálculo EAD por contrato" data-owner="Científico de Datos" data-start="10" data-dur="3" data-color="cd" data-desc="EAD = Saldo capital + Intereses corrientes + porción de línea disponible. Por tipo de producto y estado de crédito. Output: tabla ead_by_contract.">
+        <div class="task-info">
+          <div class="task-name">Cálculo EAD por contrato</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-10"></div>
+      </div>
+
+      <div class="task-row" data-task="Pérdida Esperada (EL = PD×LGD×EAD)" data-owner="Científico de Datos" data-start="12" data-dur="2" data-color="cd" data-desc="Combinar los tres modelos en una sola métrica por contrato y por segmento. Output: tabla expected_loss. Base para CVaR y RAROC.">
+        <div class="task-info">
+          <div class="task-name">Pérdida Esperada — EL</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-11"></div>
+      </div>
+
+      <div class="task-row" data-task="Modelo CVaR de la cartera" data-owner="Científico de Datos" data-start="12" data-dur="3" data-color="cd" data-desc="Simular distribución de pérdidas con Monte Carlo usando PD y correlaciones entre sectores. Calcular VaR 95% y CVaR 95%. Output: tabla risk_metrics.">
+        <div class="task-info">
+          <div class="task-name">Modelo CVaR de la cartera</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-12"></div>
+      </div>
+
+      <div class="task-row" data-task="Definir supuestos CVaR (estrategia)" data-owner="Analista Estrategia" data-start="10" data-dur="2" data-color="ae" data-desc="Decidir nivel de confianza (95% o 99%), horizonte de tiempo, y escenarios de estrés a simular (alza de mora +20%, crisis sectorial, etc.).">
+        <div class="task-info">
+          <div class="task-name">Supuestos CVaR — decisión estratégica</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ae-l);color:var(--ae)">Analista Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-13"></div>
+      </div>
+
+      <div class="task-row" data-task="Integración tablas en BD final" data-owner="Ing. de Procesos" data-start="13" data-dur="2" data-color="ip" data-desc="Materializar tabla maestra: portfolio_optimization_results con EL, CVaR, VaR por segmento. Documentar esquema y relaciones.">
+        <div class="task-info">
+          <div class="task-name">Integración en tabla maestra</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ip-l);color:var(--ip)">Ing. de Procesos</span></div>
+        </div>
+        <div class="task-bars" id="bar-14"></div>
+      </div>
+
+      <div class="task-row" data-task="Dashboard BI Fase 1 (EL y CVaR)" data-owner="Analista BI" data-start="12" data-dur="3" data-color="bi" data-desc="Construir dashboard con: mapa de calor de EL por sector/región, distribución de CVaR, top 10 contratos de mayor riesgo, evolución de mora.">
+        <div class="task-info">
+          <div class="task-name">Dashboard BI — EL y CVaR</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--bi-l);color:var(--bi)">Analista BI</span></div>
+        </div>
+        <div class="task-bars" id="bar-15"></div>
+      </div>
+
+    </div>
+
+    <!-- HITO SEM 3 -->
+    <div class="task-row" data-task="HITO: EL y CVaR calculados" data-owner="Todo el equipo" data-start="14" data-dur="0" data-color="all" data-desc="Entregable fin Semana 3: tabla expected_loss y risk_metrics operativas. Dashboard v1 publicado para revisión.">
+      <div class="task-info">
+        <div class="task-name" style="color:var(--all);font-weight:600">★ EL y CVaR operativos · Dashboard v1</div>
+        <div class="task-owner"><span class="owner-badge" style="background:var(--all-l);color:var(--all)">Hito Semana 3</span></div>
+      </div>
+      <div class="task-bars" id="bar-m3"></div>
+    </div>
+
+    <!-- FASE 4 -->
+    <div class="phase" style="margin-top:10px">
+      <div class="phase-title-row">
+        <div class="phase-label">Fase 4 — RAROC, Validación y Cierre (Sem 4)</div>
+        <div class="phase-bg"></div>
+      </div>
+
+      <div class="task-row" data-task="Cálculo RAROC por segmento" data-owner="Científico de Datos" data-start="15" data-dur="3" data-color="cd" data-desc="RAROC = (Ingreso neto - EL - Costo fondeo) / Capital económico. Output: tabla raroc_by_segment. Equivalente al Sharpe Ratio para crédito.">
+        <div class="task-info">
+          <div class="task-name">Cálculo RAROC por segmento</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">Científico de Datos</span></div>
+        </div>
+        <div class="task-bars" id="bar-16"></div>
+      </div>
+
+      <div class="task-row" data-task="Stress testing — escenarios extremos" data-owner="Científico de Datos + Estrategia" data-start="15" data-dur="2" data-color="cd" data-desc="Simular 3 escenarios: crisis sectorial, alza de tasas, deterioro macro. Ver impacto en EL y CVaR. Output: tabla stress_scenarios.">
+        <div class="task-info">
+          <div class="task-name">Stress testing — escenarios</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--cd-l);color:var(--cd)">CD + Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-17"></div>
+      </div>
+
+      <div class="task-row" data-task="Validación final y ajustes negocio" data-owner="Analista Estrategia" data-start="16" data-dur="3" data-color="ae" data-desc="Revisión integral: ¿los resultados son accionables? ¿El RAROC identifica segmentos problemáticos? Aprobar outputs o solicitar calibraciones.">
+        <div class="task-info">
+          <div class="task-name">Validación final — negocio</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ae-l);color:var(--ae)">Analista Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-18"></div>
+      </div>
+
+      <div class="task-row" data-task="Dashboard BI final + documentación" data-owner="Analista BI" data-start="16" data-dur="3" data-color="bi" data-desc="Dashboard completo con RAROC, stress testing, concentración de riesgo, comparativo por semana. Documentación técnica del pipeline.">
+        <div class="task-info">
+          <div class="task-name">Dashboard final + documentación</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--bi-l);color:var(--bi)">Analista BI</span></div>
+        </div>
+        <div class="task-bars" id="bar-19"></div>
+      </div>
+
+      <div class="task-row" data-task="Documentación técnica del pipeline" data-owner="Ing. de Procesos" data-start="17" data-dur="2" data-color="ip" data-desc="Documentar el pipeline completo: esquema de BD, scripts SQL, proceso de actualización, dependencias, manual de mantenimiento.">
+        <div class="task-info">
+          <div class="task-name">Documentación técnica pipeline</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ip-l);color:var(--ip)">Ing. de Procesos</span></div>
+        </div>
+        <div class="task-bars" id="bar-20"></div>
+      </div>
+
+      <div class="task-row" data-task="Presentación final al liderazgo" data-owner="Analista Estrategia" data-start="18" data-dur="2" data-color="ae" data-desc="Presentar resultados: modelos operativos, hallazgos clave de riesgo, recomendaciones estratégicas de portafolio, próximos pasos (Markowitz + BL).">
+        <div class="task-info">
+          <div class="task-name">Presentación final al liderazgo</div>
+          <div class="task-owner"><span class="owner-badge" style="background:var(--ae-l);color:var(--ae)">Analista Estrategia</span></div>
+        </div>
+        <div class="task-bars" id="bar-21"></div>
+      </div>
+
+    </div>
+
+    <!-- HITO FINAL -->
+    <div class="task-row" data-task="HITO FINAL: Fase I completada" data-owner="Todo el equipo" data-start="19" data-dur="0" data-color="all" data-desc="Cierre Fase I: PD, LGD, EAD, EL, CVaR y RAROC operativos. Pipeline automatizado. Dashboard publicado. Base lista para Fase II (Markowitz + BL).">
+      <div class="task-info">
+        <div class="task-name" style="color:var(--all);font-weight:600">★ FASE I COMPLETA — Base para Optimización</div>
+        <div class="task-owner"><span class="owner-badge" style="background:var(--all-l);color:var(--all)">Hito Final 30 Abril</span></div>
+      </div>
+      <div class="task-bars" id="bar-mf"></div>
+    </div>
+
+  </div><!-- /gantt -->
+  </div><!-- /gantt-wrap -->
+
+  <!-- ENTREGABLES POR SEMANA -->
+  <div class="deliverables">
+    <div class="del-title">Entregables por semana</div>
+    <div class="del-grid">
+      <div class="del-card" style="border-top-color:var(--ip)">
+        <div class="del-week" style="color:var(--ip)">Semana 1 · 1–5 Abr</div>
+        <ul class="del-items">
+          <li>Tablas base SQL creadas</li>
+          <li>Universo de segmentos definido</li>
+          <li>Modelo PD en borrador</li>
+          <li>Auditoría de calidad de datos</li>
+        </ul>
+      </div>
+      <div class="del-card" style="border-top-color:var(--cd)">
+        <div class="del-week" style="color:var(--cd)">Semana 2 · 8–12 Abr</div>
+        <ul class="del-items">
+          <li>Tabla pd_by_segment</li>
+          <li>Tabla lgd_estimates</li>
+          <li>Pipeline ETL operativo</li>
+          <li>Vista previa BI — PD/LGD</li>
+        </ul>
+      </div>
+      <div class="del-card" style="border-top-color:var(--bi)">
+        <div class="del-week" style="color:var(--bi)">Semana 3 · 15–19 Abr</div>
+        <ul class="del-items">
+          <li>Tabla ead_by_contract</li>
+          <li>Tabla expected_loss</li>
+          <li>Tabla risk_metrics (CVaR)</li>
+          <li>Dashboard v1 publicado</li>
+        </ul>
+      </div>
+      <div class="del-card" style="border-top-color:var(--ae)">
+        <div class="del-week" style="color:var(--ae)">Semana 4 · 22–30 Abr</div>
+        <ul class="del-items">
+          <li>Tabla raroc_by_segment</li>
+          <li>Stress testing (3 escenarios)</li>
+          <li>Dashboard final completo</li>
+          <li>Presentación al liderazgo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const COLORS = {
+  cd:  { bar: '#1D4E89', light: '#D6E4F7', text: '#1D4E89' },
+  bi:  { bar: '#2D7D4F', light: '#D4EDDA', text: '#2D7D4F' },
+  ip:  { bar: '#8B4513', light: '#F5DEB3', text: '#8B4513' },
+  ae:  { bar: '#6B2D8B', light: '#E8D5F5', text: '#6B2D8B' },
+  all: { bar: '#C0392B', light: '#FADBD8', text: '#C0392B' },
+};
+
+const TOTAL_DAYS = 20;
+const WEEK_DAYS = [
+  'Lun 1', 'Mar 2', 'Mié 3', 'Jue 4', 'Vie 5',
+  'Lun 8', 'Mar 9', 'Mié 10','Jue 11','Vie 12',
+  'Lun 15','Mar 16','Mié 17','Jue 18','Vie 19',
+  'Lun 22','Mar 23','Mié 24','Jue 25','Vie 30',
+];
+
+const WEEK_LABELS = ['Semana 1 · Abr 1–5', '', '', '', '',
+                     'Semana 2 · Abr 8–12','','','','',
+                     'Semana 3 · Abr 15–19','','','','',
+                     'Semana 4 · Abr 22–30','','','',''];
+
+// Build week header
+const wh = document.getElementById('week-header');
+WEEK_LABELS.forEach((lbl, i) => {
+  const d = document.createElement('div');
+  d.className = 'week-label' + (i % 5 === 0 ? ' first' : '');
+  d.textContent = i % 5 === 0 ? lbl.split('·')[0].trim() : '';
+  d.title = WEEK_DAYS[i];
+  d.style.fontSize = '10px';
+  wh.appendChild(d);
+});
+
+// Build bars for each task
+document.querySelectorAll('.task-row').forEach(row => {
+  const barId = row.querySelector('.task-bars')?.id;
+  if (!barId) return;
+  const container = document.getElementById(barId);
+  if (!container) return;
+
+  const start = parseInt(row.dataset.start);
+  const dur   = parseInt(row.dataset.dur);
+  const color = row.dataset.color;
+  const task  = row.dataset.task;
+  const owner = row.dataset.owner;
+  const desc  = row.dataset.desc;
+  const c = COLORS[color] || COLORS.all;
+
+  // Day cells background
+  for (let i = 0; i < TOTAL_DAYS; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (i % 5 === 4 ? ' week-end' : '');
+    container.appendChild(cell);
+  }
+
+  const cellW = 100 / TOTAL_DAYS;
+
+  if (dur === 0) {
+    // Milestone diamond
+    const m = document.createElement('div');
+    m.className = 'milestone';
+    m.style.left = `calc(${start * cellW}% - 7px)`;
+    m.style.background = c.bar;
+    m.title = task;
+    addTooltip(m, task, owner, desc, `Hito — Día ${start}`);
+    container.appendChild(m);
+  } else {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.left   = `${start * cellW}%`;
+    bar.style.width  = `calc(${dur * cellW}% - 3px)`;
+    bar.style.background = c.bar;
+    bar.style.color = '#fff';
+    bar.textContent = dur >= 3 ? task : '';
+    addTooltip(bar, task, owner, desc, `Días ${start + 1}–${start + dur}`);
+    container.appendChild(bar);
+  }
+});
+
+function addTooltip(el, task, owner, desc, timing) {
+  const tip = document.getElementById('tooltip');
+  el.addEventListener('mouseenter', e => {
+    tip.innerHTML = `<strong>${task}</strong>
+      <div class="t-row"><span class="t-label">Responsable</span><span>${owner}</span></div>
+      <div class="t-row"><span class="t-label">Periodo</span><span>${timing}</span></div>
+      <div style="margin-top:6px;font-size:11px;color:#ccc;line-height:1.5">${desc}</div>`;
+    tip.style.display = 'block';
+    positionTip(e);
+  });
+  el.addEventListener('mousemove', positionTip);
+  el.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+}
+
+function positionTip(e) {
+  const tip = document.getElementById('tooltip');
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + 270 > window.innerWidth) x = e.clientX - 280;
+  if (y + 160 > window.innerHeight) y = e.clientY - 160;
+  tip.style.left = x + 'px';
+  tip.style.top  = y + 'px';
+}
+</script>
+</body>
+</html>
